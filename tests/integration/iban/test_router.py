@@ -4,7 +4,6 @@ import string
 from fastapi.testclient import TestClient
 from starlette import status
 
-from src.config import config
 from src.iban.validator.iban import MONTENEGRO_BBAN_SPEC
 from src.main import app
 from tests.utils import generate_iban
@@ -17,27 +16,49 @@ IBAN_BASE_ENDPOINT = '/api/v1/iban'
 def test_health():
     response = client.get('/')
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {'health': 'ok', 'debug': config.DEBUG}
+    assert response.json() == {'health': 'ok'}
 
 
 def test_validate_success():
     iban = generate_iban()
+    bban = iban[4:]
     response = client.post(
         url=IBAN_BASE_ENDPOINT + '/validate',
         json={'code': iban}
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {'validated': True, 'code': iban}
+    assert response.json() == {
+        'validated': True,
+        'code': iban,
+        'details': {
+            'bban': int(bban),
+            'bank_code': int(bban[0:3]),
+            'account_code': int(bban[3:]),
+            'checksum_digits': int(iban[2:4]),
+            'country_code': iban[0:2]
+        }
+    }
 
 
 def test_validate_success_even_when_lowercase_code():
     iban = generate_iban().lower()
+    bban = iban[4:]
     response = client.post(
         url=IBAN_BASE_ENDPOINT + '/validate',
         json={'code': iban}
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {'validated': True, 'code': iban.upper()}
+    assert response.json() == {
+        'validated': True,
+        'code': iban.upper(),
+        'details': {
+            'bban': int(bban),
+            'bank_code': int(bban[0:3]),
+            'account_code': int(bban[3:]),
+            'checksum_digits': int(iban[2:4]),
+            'country_code': iban[0:2].upper()
+        }
+    }
 
 
 def test_validate_fail_when_length_more_than_fixed():

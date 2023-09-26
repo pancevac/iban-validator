@@ -19,6 +19,11 @@ MONTENEGRO_BBAN_REGEX = build_bban_regex(MONTENEGRO_BBAN_SPEC)
 MONTENEGRO_IBAN_LENGTH = 22
 MONTENEGRO_COUNTRY_CODE = 'ME'
 
+MONTENEGRO_IBAN_POSITIONS = {
+    'bank_code': (0, 3),
+    'account_code': (3, 18)
+}
+
 
 class IBAN:
     def __init__(self, code: str):
@@ -56,6 +61,18 @@ class IBAN:
         Extract checksum digits from IBAN, also known as control digits.
         """
         return self._get_component(start=2, end=4)
+
+    @property
+    def bank_code(self) -> str:
+        return self._get_code('bank_code')
+
+    @property
+    def account_code(self) -> str:
+        return self._get_code('account_code')
+
+    def _get_code(self, code_type: str) -> str:
+        start, end = MONTENEGRO_IBAN_POSITIONS[code_type]
+        return self.bban[start:end]
 
     def _get_component(self, start: int, end: Optional[int] = None) -> str:
         """
