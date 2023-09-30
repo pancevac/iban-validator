@@ -21,14 +21,14 @@ class IBAN(BaseModel):
 
 
 class IBANDetails(BaseModel):
-    bban: int = Field(title='Basic Bank Account Number', examples=['143598727954283120'])
-    bank_code: int = Field(title='Bank Code', examples=['143'])
-    account_code: int = Field(title='Account Code', examples=['598727954283123'])
-    checksum_digits: int = Field(title='Checksum digits', examples=['21'])
+    bban: str = Field(title='Basic Bank Account Number', examples=['143598727954283120'])
+    bank_code: str = Field(title='Bank Code', examples=['143'])
+    account_code: str = Field(title='Account Code', examples=['598727954283123'])
+    checksum_digits: str = Field(title='Checksum digits', examples=['21'])
     country_code: str = Field(title='Country Code', examples=['ME'])
 
 
 class IBANResponse(BaseModel):
-    validated: bool = True
+    fully_validated: bool
     code: str = Field(title='International Bank Account Number', examples=['ME21143598727954283123'])
     details: IBANDetails

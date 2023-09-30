@@ -9,6 +9,7 @@ router = APIRouter(prefix='/iban')
 async def validate(iban: IBAN):
     return IBANResponse(
         code=iban.code,
+        fully_validated=iban.validator_instance.completed_iban,
         details=IBANDetails(
             bank_code=iban.validator_instance.bank_code,
             account_code=iban.validator_instance.account_code,

@@ -45,6 +45,13 @@ class IBAN:
         return self._get_component(start=4)
 
     @property
+    def completed_iban(self) -> bool:
+        """
+        Is IBAN code is fully written or only part of it?
+        """
+        return self.length == MONTENEGRO_IBAN_LENGTH
+
+    @property
     def country_code(self) -> str:
         return self._get_component(start=0, end=2)
 
@@ -72,7 +79,10 @@ class IBAN:
 
     def _get_code(self, code_type: str) -> str:
         start, end = MONTENEGRO_IBAN_POSITIONS[code_type]
-        return self.bban[start:end]
+        code = self.bban[start:end]
+        if len(code) == end - start:
+            return code
+        return ''
 
     def _get_component(self, start: int, end: Optional[int] = None) -> str:
         """
@@ -86,8 +96,17 @@ class IBAN:
         return "{:02d}".format(98 - (numerify(self.bban + self.country_code) * 100) % 97)
 
     def _validate_characters(self) -> None:
-        if not re.match(r"[A-Z]{2}\d{2}[A-Z]*", self._code):
+        if not re.match(r"[A-Z]{2}\d{2}[A-Z]*", self._code):  # TODO review this regex!
             raise exceptions.InvalidStructure(f"Invalid characters in IBAN {self._code}")
+
+    def _validate_characters_partially(self) -> None:
+        if self.length <= 2:
+            if not re.match(r"[A-Z]{2}$", self._code):
+                raise exceptions.InvalidStructure(f"Invalid characters in IBAN {self._code}")
+
+        else:
+            if not re.match(r"[A-Z]{2}\d+$", self._code):
+                raise exceptions.InvalidStructure(f"Invalid characters in IBAN {self._code}")
 
     def _validate_format(self) -> None:
         if not re.match(MONTENEGRO_BBAN_REGEX, self.bban):
@@ -105,13 +124,26 @@ class IBAN:
         if self.country_code != MONTENEGRO_COUNTRY_CODE:
             raise exceptions.InvalidCountryCode("Invalid country code")
 
-    def _validate_length(self):
+    def _validate_length(self) -> None:
         if MONTENEGRO_IBAN_LENGTH != self.length:
             raise exceptions.InvalidLength("Invalid IBAN length")
 
+    def _validate_length_partially(self) -> None:
+        if MONTENEGRO_IBAN_LENGTH < self.length:
+            raise exceptions.InvalidLength("Invalid IBAN length")
+
+    def _validate_format_partially(self) -> None:
+        raise NotImplemented
+
     def validate(self):
-        self._validate_characters()
-        self._validate_length()
-        self._validate_country_code()
-        self._validate_format()
-        self._validate_iban_checksum()
+        if self.completed_iban:
+            self._validate_characters()
+            self._validate_length()
+            self._validate_country_code()
+            self._validate_format()
+            self._validate_iban_checksum()
+        else:
+            self._validate_characters_partially()
+            self._validate_length_partially()
+            self._validate_country_code()
+            # self._validate_format_partially()
