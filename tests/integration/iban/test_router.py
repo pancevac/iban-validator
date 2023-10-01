@@ -1,25 +1,21 @@
 import random
 import string
 
-from fastapi.testclient import TestClient
 from starlette import status
 
 from src.iban.validator.iban import MONTENEGRO_BBAN_SPEC
-from src.main import app
 from tests.utils import generate_iban
-
-client = TestClient(app)
 
 IBAN_BASE_ENDPOINT = '/api/v1/iban'
 
 
-def test_health():
+def test_health(client):
     response = client.get('/')
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {'health': 'ok'}
 
 
-def test_validate_success():
+def test_validate_success(client):
     iban = generate_iban()
     bban = iban[4:]
     response = client.post(
@@ -40,7 +36,7 @@ def test_validate_success():
     }
 
 
-def test_validate_success_even_when_lowercase_code():
+def test_validate_success_even_when_lowercase_code(client):
     iban = generate_iban().lower()
     bban = iban[4:]
     response = client.post(
@@ -61,7 +57,7 @@ def test_validate_success_even_when_lowercase_code():
     }
 
 
-def test_partial_validate_success_case1():
+def test_partial_validate_success_case1(client):
     """
     In this case, cut IBAN code from randomly chosen index starting from 4.
     """
@@ -95,7 +91,7 @@ def test_partial_validate_success_case1():
     }
 
 
-def test_partial_validate_success_case2():
+def test_partial_validate_success_case2(client):
     """
     In this case, provide only fully country_code.
     """
@@ -119,7 +115,7 @@ def test_partial_validate_success_case2():
     }
 
 
-def test_partial_validate_success_case3():
+def test_partial_validate_success_case3(client):
     """
     In this case, provide fully country code and only one digit of checksum.
     """
@@ -145,7 +141,7 @@ def test_partial_validate_success_case3():
     }
 
 
-def test_partial_validate_fail_when_provided_uncompleted_country_code():
+def test_partial_validate_fail_when_provided_uncompleted_country_code(client):
     iban = generate_iban()
     response = client.post(
         url=IBAN_BASE_ENDPOINT + '/validate',
@@ -156,7 +152,7 @@ def test_partial_validate_fail_when_provided_uncompleted_country_code():
     assert response.json()['detail'][0]['msg'] == f'Value error, Invalid characters in IBAN {iban[0:1]}'
 
 
-def test_partial_validate_fail_when_format_is_invalid():
+def test_partial_validate_fail_when_format_is_invalid(client):
     iban = generate_iban()
     partial_iban = iban[:random.randint(4, 21)]
     partial_iban = partial_iban[:-1] + random.choice(string.ascii_uppercase)
@@ -170,7 +166,7 @@ def test_partial_validate_fail_when_format_is_invalid():
         "Invalid characters in IBAN {}".format(partial_iban)
 
 
-def test_validate_fail_when_length_more_than_fixed():
+def test_validate_fail_when_length_more_than_fixed(client):
     iban = generate_iban() + str(random.randint(1, 9))
     response = client.post(
         url=IBAN_BASE_ENDPOINT + '/validate',
@@ -181,7 +177,7 @@ def test_validate_fail_when_length_more_than_fixed():
     assert response.json()['detail'][0]['msg'] == 'Value error, Invalid IBAN length'
 
 
-def test_validate_fail_when_country_code_is_different():
+def test_validate_fail_when_country_code_is_different(client):
     iban = generate_iban(county_code='RS')
 
     response = client.post(
@@ -193,7 +189,7 @@ def test_validate_fail_when_country_code_is_different():
     assert response.json()['detail'][0]['msg'] == 'Value error, Invalid country code'
 
 
-def test_validate_fail_when_calc_checksum_not_matching():
+def test_validate_fail_when_calc_checksum_not_matching(client):
     iban = generate_iban()
 
     # replace last digit with randomly generated except the original
@@ -210,7 +206,7 @@ def test_validate_fail_when_calc_checksum_not_matching():
     assert response.json()['detail'][0]['msg'] == 'Value error, Invalid checksum digits'
 
 
-def test_validate_fail_when_format_is_invalid():
+def test_validate_fail_when_format_is_invalid(client):
     iban = generate_iban()
 
     iban = iban[:-1] + random.choice(string.ascii_uppercase)
