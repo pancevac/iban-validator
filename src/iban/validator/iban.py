@@ -28,6 +28,7 @@ MONTENEGRO_IBAN_POSITIONS = {
 class IBAN:
     def __init__(self, code: str):
         self._code = clear(code)
+        self._validated = False
 
     @property
     def code(self) -> str:
@@ -36,6 +37,10 @@ class IBAN:
     @property
     def length(self) -> int:
         return len(self._code)
+
+    @property
+    def validated(self) -> bool:
+        return self._validated
 
     @property
     def bban(self) -> str:
@@ -147,3 +152,5 @@ class IBAN:
             self._validate_length_partially()
             self._validate_country_code()
             # self._validate_format_partially()
+
+        self._validated = True

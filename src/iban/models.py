@@ -12,7 +12,7 @@ class StatusTypes(IntEnum):
     failed = 3
 
 
-class IBANValidations(Base):
+class IBANValidationHistory(Base):
     __tablename__ = 'iban_validations'
 
     id = Column(Integer, primary_key=True, index=True)

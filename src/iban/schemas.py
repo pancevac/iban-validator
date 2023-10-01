@@ -1,5 +1,9 @@
+from datetime import datetime
+from typing import Union
+
 from pydantic import BaseModel, Field, field_validator
 
+from src.iban.models import StatusTypes
 from src.iban.validator.iban import IBAN as IBANValidator
 
 
@@ -32,3 +36,23 @@ class IBANResponse(BaseModel):
     fully_validated: bool
     code: str = Field(title='International Bank Account Number', examples=['ME21143598727954283123'])
     details: IBANDetails
+
+
+class IBANValidationsResponse(BaseModel):
+    id: int
+    code: str = Field(
+        title='International Bank Account Number',
+        examples=['ME21143598727954283123'])
+    status: StatusTypes = Field(
+        title='Status of the validation',
+        examples=['failed', 'partially_validated', 'validated'])
+    error_message: Union[str, None] = Field(
+        title='Error message if validation failed',
+        examples=['Value error, Invalid country code']
+    )
+    timestamp: datetime
+
+    class Config:
+        # Remap enum int values as string names, see: https://stackoverflow.com/a/75586485
+        json_encoders = {StatusTypes: lambda s: s.name}
+        from_attributes = True
