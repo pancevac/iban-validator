@@ -10,10 +10,23 @@ services:
       - './:/app'
     depends_on:
       - db
+      - redis
+      - worker
     command: sh -c "
       sleep 5 && 
       alembic upgrade head && 
       uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+    command: sh -c "
+      sleep 5 && 
+      arq src.worker.WorkerSettings"
 
   db:
     image: postgres
@@ -27,6 +40,13 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  redis:
+    image: 'bitnami/redis'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+
   tests:
     build:
       context: .
@@ -34,6 +54,9 @@ services:
     command: pytest
     environment:
       - TESTING=TRUE
+      - REDIS_URI=redis://redis:6379?db=1
+    depends_on:
+      - redis
 
 
 volumes:

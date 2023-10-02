@@ -2,16 +2,28 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db import get_db
+from src.iban.models import StatusTypes
 from src.iban.schemas import IBAN, IBANResponse, IBANDetails, IBANValidationsResponse
 from src.iban.services import IBANValidationHistoryService
+from src.iban.utils import IBANValidationErrorLoggingRoute, Task
+from src.queue import get_redis
 
 router = APIRouter(
-    prefix='/iban'
+    prefix='/iban',
+    route_class=IBANValidationErrorLoggingRoute
 )
 
 
 @router.post('/validate', response_model=IBANResponse)
 async def validate(iban: IBAN):
+    task = Task(
+        iban=iban.code,
+        status=StatusTypes.validated if iban.validator_instance.completed_iban else StatusTypes.partially_validated
+    )
+
+    async with get_redis() as redis:
+        await redis.enqueue_job('process_iban_validation_result', task)
+
     return IBANResponse(
         code=iban.code,
         fully_validated=iban.validator_instance.completed_iban,

@@ -18,7 +18,7 @@ class IBANValidationHistoryService:
     async def save(
             self,
             iban_code: str,
-            status: Union[StatusTypes.validated, StatusTypes.partially_validated, StatusTypes.failed],
+            status: StatusTypes,
             error_msg: Union[str, None] = None
     ) -> IBANValidationHistory:
         model = IBANValidationHistory(code=iban_code, status=status, error_message=error_msg)
