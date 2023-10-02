@@ -10,8 +10,8 @@ class IBANValidationHistoryService:
     def __init__(self, db: AsyncSession):
         self._db = db
 
-    async def get_all(self) -> Sequence[IBANValidationHistory]:
-        query = select(IBANValidationHistory)
+    async def get_all(self, limit: int, offset: int) -> Sequence[IBANValidationHistory]:
+        query = select(IBANValidationHistory).limit(limit).offset(offset)
         result = await self._db.execute(query)
         return result.scalars().all()
 

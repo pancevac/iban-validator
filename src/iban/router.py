@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db import get_db
 from src.iban.models import StatusTypes
-from src.iban.schemas import IBAN, IBANResponse, IBANDetails, IBANValidationsResponse
+from src.iban.schemas import IBAN, IBANResponse, IBANDetails, IBANValidationHistoryResponse, PaginatedResponse
 from src.iban.services import IBANValidationHistoryService
 from src.iban.utils import IBANValidationErrorLoggingRoute, Task
 from src.queue import get_redis
@@ -37,8 +37,12 @@ async def validate(iban: IBAN):
     )
 
 
-@router.get('/history', response_model=list[IBANValidationsResponse])
-async def history(db: AsyncSession = Depends(get_db)):
+@router.get('/history', response_model=PaginatedResponse[IBANValidationHistoryResponse])
+async def history(
+        db: AsyncSession = Depends(get_db),
+        limit: int = Query(100, ge=0, le=100),
+        offset: int = Query(0, ge=0)
+):
     service = IBANValidationHistoryService(db)
-    result = await service.get_all()
-    return result
+    items = await service.get_all(limit=limit, offset=offset)
+    return PaginatedResponse(count=len(items), items=items)

@@ -1,10 +1,12 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, Generic, TypeVar, List
 
 from pydantic import BaseModel, Field, field_validator
 
 from src.iban.models import StatusTypes
 from src.iban.validator.iban import IBAN as IBANValidator
+
+M = TypeVar('M')
 
 
 class IBAN(BaseModel):
@@ -38,7 +40,7 @@ class IBANResponse(BaseModel):
     details: IBANDetails
 
 
-class IBANValidationsResponse(BaseModel):
+class IBANValidationHistoryResponse(BaseModel):
     id: int
     code: str = Field(
         title='International Bank Account Number',
@@ -56,3 +58,8 @@ class IBANValidationsResponse(BaseModel):
         # Remap enum int values as string names, see: https://stackoverflow.com/a/75586485
         json_encoders = {StatusTypes: lambda s: s.name}
         from_attributes = True
+
+
+class PaginatedResponse(BaseModel, Generic[M]):
+    count: int = Field(description='Number of items returned in the response')
+    items: List[M] = Field(description='List of items returned in the response following given criteria')
