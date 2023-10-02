@@ -8,9 +8,11 @@ RUN apt-get update &&  \
     apt-get -y upgrade &&  \
     apt-get -y install postgresql
 
-COPY ./requirements.txt /app/requirements.txt
+COPY poetry.lock pyproject.toml ./
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+RUN pip install poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install
 
 COPY . /app
 
