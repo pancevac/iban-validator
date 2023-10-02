@@ -59,3 +59,10 @@ docker compose down
 ```bash
 docker compose up tests
 ```
+
+### Note:
+If you modify code, you'll need to rebuild docker images for `api`, `worker` and `tests` services.
+
+```bash
+docker compose build
+```

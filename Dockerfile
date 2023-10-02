@@ -1,5 +1,9 @@
 FROM python:3.11-bullseye
 
+ENV PYTHONUNBUFFERED=1 \
+    # prevents python creating .pyc files
+    PYTHONDONTWRITEBYTECODE=1
+
 WORKDIR /app
 
 RUN adduser --system --no-create-home nonroot
@@ -18,4 +22,4 @@ COPY . /app
 
 USER nonroot
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
