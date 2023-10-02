@@ -31,10 +31,10 @@ app = FastAPI(
 app.include_router(iban_router.router, prefix='/api/v1')
 
 
-class HealthResponse(BaseModel):
-    health: str = 'ok'
+class PingResponse(BaseModel):
+    ping: str = 'pong'
 
 
-@app.get("/", response_model=HealthResponse)
-async def health():
-    return HealthResponse()
+@app.get("/", response_model=PingResponse)
+async def ping():
+    return PingResponse()

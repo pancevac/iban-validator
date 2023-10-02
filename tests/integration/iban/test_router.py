@@ -9,10 +9,10 @@ from tests.utils import generate_iban
 IBAN_BASE_ENDPOINT = '/api/v1/iban'
 
 
-def test_health(client):
+def test_ping(client):
     response = client.get('/')
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {'health': 'ok'}
+    assert response.json() == {'ping': 'pong'}
 
 
 def test_validate_success(client):
